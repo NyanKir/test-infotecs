@@ -1,5 +1,5 @@
 :root {
-    --primary: #f3f3f3;
+    --primary: #c9c9c9;
 }
 
 *{
@@ -12,26 +12,33 @@ body {
 }
 
 .wrapper {
-    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+.wrapper__edit, .wrapper__table{
+    width: 50%;
 }
 
 .table {
-    width: 50%;
     border-collapse: collapse;
 }
 
-.table__th, .table__td {
-    padding: 2px;
-}
 
 .table__th {
-    background-color: #f3f3f3;
+    background-color: var(--primary);
     font-weight: 500;
+    height: 40px;
     cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
 }
 
 .table__tr {
-    border-bottom: 2px solid #f3f3f3;
+    cursor: pointer;
+    border-bottom: 2px solid var(--primary);
+}
+.table__tr:last-child, .table__tr:first-child {
+    border-bottom:none;
 }
 
 .table__td_truncate {
@@ -49,7 +56,6 @@ body {
 }
 
 .pagination {
-    width: 50%;
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
@@ -78,6 +84,7 @@ body {
 .panel {
     display: flex;
     flex-wrap: wrap;
+    background-color: gray;
 }
 
 .arrow-top:after {
@@ -87,10 +94,39 @@ body {
     content: "\1F447";
 }
 
-/*.arrow_top {*/
-/* /   transform: rotate(-45deg);*/
-/*}*/
+.edit-area{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-/*.arrow_bottom {*/
-/*    transform: rotate(45deg);*/
-/*}*/
+.edit-area__label{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+}
+.edit-area__label > span{
+    margin-bottom: 2px;
+}
+.edit-area__input{
+    width: 300px;
+}
+.edit-area__textarea{
+    width: 300px;
+    resize: vertical;
+}
+
+.btn{
+    width: 120px;
+    height: 40px;
+    padding: 5px 9px;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--primary);
+    transition: .3s  background-color linear;
+}
+
+.btn:hover{
+    background-color: gray;
+}

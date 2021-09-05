@@ -1,66 +1,104 @@
 import EventEmitter from "./EventEmitter.js";
 
-export default class TableView extends EventEmitter{
-    constructor(model,tableRef) {
+export default class TableView extends EventEmitter {
+    constructor(model, tableRef, editRef) {
         super()
-        this.model=model
-        this.tableRef=tableRef
+        this.model = model
+        this.tableRef = tableRef
+        this.editRef = editRef
 
-        this.model.subscribe('render',()=>this.render())
+        this.model.subscribe('render', () => this.render())
+        this.model.subscribe('editPanel', () => this.editPanel())
     }
 
-    clear(){
-        this.tableRef.innerText=''
+    editPanel() {
+        this.editRef.innerHTML = ''
+        this.model.headers.forEach((head) => {
+            const label = document.createElement('label')
+            let input;
+
+            label.innerHTML = `<span>${head.name}</span>`
+            label.classList.add('edit-area__label')
+            if (head.path === 'about') {
+                input = document.createElement('textarea')
+                input.classList.add('edit-area__textarea')
+            } else {
+                if (head.path === 'eyeColor') {
+                    input = document.createElement('input')
+                    input.type = 'color'
+                    input.setAttribute('value', this.model.pickedRow[head.path])
+                } else {
+                    input = document.createElement('input')
+                    input.classList.add('edit-area__input')
+                }
+
+
+            }
+            if (head.include) {
+                input.value = this.model.pickedRow['name'][head.include]
+            } else {
+                input.value = this.model.pickedRow[head.path]
+            }
+
+            label.appendChild(input)
+            this.editRef.appendChild(label)
+
+        })
+
+        const btn = document.createElement('button')
+        btn.textContent = "Изменить"
+        btn.classList.add('btn')
+        // btn.addEventListener('click')
+        this.editRef.appendChild(btn)
+    }
+
+    clear() {
+        this.tableRef.innerText = ''
         document.getElementById('pagination')?.remove()
         document.getElementById('panel')?.remove()
     }
-    renderFilterPanel(){
+
+    renderFilterPanel() {
         const div = document.createElement('div')
         div.classList.add('panel')
-        div.id='panel'
-        div.textContent='Panel'
-        // const span=document.createElement('span')
-        // span.classList.add('anchor')
-        // span.textContent='Скрыть/Показать колонны'
-        // const ul=document.createElement('ul')
-        // ul.classList.add('list')
-        // this.model.headers.forEach((el)=>{
-        //     const li=document.createElement('li')
-        //     const input = document.createElement('input')
-        //     input.type='checkbox'
-        //     li.classList.add('list__item')
-        //     li.textContent=el.name
-        //     li.appendChild(input)
-        //     ul.appendChild(li)
-        // })
-        // div.appendChild(span)
-        // div.appendChild(ul)
-        //
-        // div.getElementsByClassName('anchor')[0].onclick = function(evt) {
-        //     if (div.classList.contains('visible'))
-        //         div.classList.remove('visible');
-        //     else
-        //         div.classList.add('visible');
-        // }
+        div.id = 'panel'
+        this.model.headers.forEach((head) => {
+            const input = document.createElement('input')
+            const label = document.createElement('label')
+            input.type = 'checkbox'
+            label.textContent = head.name
+
+            if (head.include) {
+                input.value = head.include
+            } else {
+                input.value = head.path
+            }
+
+            input.checked = head.show
+
+            input.addEventListener("change", (e) => this.emit("columnHandler", e.target))
+            label.appendChild(input)
+            div.appendChild(label)
+        })
         this.tableRef.before(div)
     }
 
-    renderPagination(){
-        const wrapper=document.createElement('div')
-        wrapper.innerText=''
+    renderPagination() {
+        const wrapper = document.createElement('div')
+        wrapper.innerText = ''
         wrapper.classList.add('pagination')
-        wrapper.id='pagination'
+        wrapper.id = 'pagination'
 
-        for(let i=0;i<this.model.countPages;i++){
-            const btn=document.createElement('button')
+        for (let i = 0; i < this.model.countPages; i++) {
+            const btn = document.createElement('button')
 
-            if(i+1==this.model.currentPage){
+            if (i + 1 == this.model.currentPage) {
                 btn.classList.add('pagination__btn_current')
             }
 
-            btn.setAttribute('data-page',i+1)
-            btn.addEventListener('click', (e)=> this.emit('changeCurrentPage',e.target.dataset.page))
-            btn.textContent=i+1
+            btn.setAttribute('data-page', i + 1)
+            btn.addEventListener('click', (e) => this.emit('changeCurrentPage', e.target.dataset.page))
+            btn.textContent = i + 1
             btn.classList.add('pagination__btn')
             wrapper.appendChild(btn)
         }
@@ -68,47 +106,63 @@ export default class TableView extends EventEmitter{
         this.tableRef.after(wrapper)
     }
 
-    renderHeader(){
+    renderHeader() {
         const newRow = this.tableRef.insertRow(-1);
         newRow.classList.add('table__tr')
 
-        this.model.headers.forEach((el, index) => {
-            const newCell = newRow.insertCell(index);
+        this.model.headers.reduce((acc, el, index) => {
+            if (!el.show) {
+                return acc;
+            }
+            const newCell = newRow.insertCell(acc);
             newCell.classList.add('table__th');
-            newCell.addEventListener('dblclick',(e)=>{
-                this.emit('sortColumn',e)
+            newCell.addEventListener('dblclick', (e) => {
+                this.emit('sortColumn', e)
             })
-            if(el.sort !== undefined){
-                newCell.classList.add(el.sort?'arrow-top':'arrow-bottom')
+            newCell.addEventListener('contextmenu', (ev) => {
+                ev.preventDefault();
+                this.emit("clearHeaderSort")
+                return false;
+            });
+            if (el.sort !== undefined) {
+                newCell.classList.add(el.sort ? 'arrow-top' : 'arrow-bottom')
             }
 
-            if(el.include){
-                newCell.setAttribute('data-column',el.include)
-                newCell.setAttribute('data-include',true)
-            }else{
-                newCell.setAttribute('data-column',el.path)
+            if (el.include) {
+                newCell.setAttribute('data-column', el.include)
+                newCell.setAttribute('data-include', true)
+            } else {
+                newCell.setAttribute('data-column', el.path)
             }
             const newText = document.createTextNode(el.name);
             newCell.setAttribute('title', el.name)
             newCell.appendChild(newText);
-        })
+            return acc + 1;
+        }, 0)
     }
 
-    render(){
+    render() {
         this.clear()
+        this.renderFilterPanel()
+        if (this.model.wholeColumnsHidden) {
+            return
+        }
         this.renderHeader()
         this.renderPagination()
-        this.renderFilterPanel()
 
         this.model.currentTableData.forEach((el) => {
             const newRow = this.tableRef.insertRow(-1);
             newRow.classList.add('table__tr')
-            newRow.setAttribute('data-id',el.id)
-            newRow.addEventListener('click',(e)=>this.emit('selectRow',e.target.parentElement.dataset.id))
+            newRow.setAttribute('data-id', el.id)
+            newRow.addEventListener('click', (e) => this.emit('selectRow', e.target.parentElement.dataset.id))
 
-            this.model.headers.forEach((head, index) => {
+            this.model.headers.reduce((acc, head, index) => {
+                if (!head.show) {
+                    return acc;
+                }
+
                 let newText;
-                const newCell = newRow.insertCell(index);
+                const newCell = newRow.insertCell(acc);
                 newCell.classList.add('table__td');
 
 
@@ -129,7 +183,9 @@ export default class TableView extends EventEmitter{
                     newText = document.createTextNode(el[head.path]);
                 }
                 newCell.appendChild(newText);
-            })
+                return acc + 1;
+
+            }, 0)
         })
 
     }
