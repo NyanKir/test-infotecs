@@ -109,8 +109,17 @@ export default class TableModel extends EventEmitter {
             }
         })
         this.emit('editPanel')
+        this.emit('render')
     }
-    changeData(data){
-        console.log(data)
+    changeData(){
+        this.table.map((el)=>{
+            if(el.id===this.pickedRow?.id){
+                return this.pickedRow
+            }
+            return el
+        })
+        alert('Success!')
+        this.emit('render')
+
     }
 }

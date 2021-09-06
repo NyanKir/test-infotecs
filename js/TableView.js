@@ -36,10 +36,19 @@ export default class TableView extends EventEmitter {
             }
             if (head.include) {
                 input.value = this.model.pickedRow['name'][head.include]
+                input.id = head.include
             } else {
+                input.id = head.path
                 input.value = this.model.pickedRow[head.path]
             }
 
+            input.addEventListener('change', (e)=> {
+                if(e.target.id === 'lastName' || e.target.id==='firstName'){
+                    this.model.pickedRow['name'][e.target.id]=e.target.value
+                }else{
+                    this.model.pickedRow[e.target.id]=e.target.value
+                }
+            })
             label.appendChild(input)
             this.editRef.appendChild(label)
 
@@ -48,7 +57,7 @@ export default class TableView extends EventEmitter {
         const btn = document.createElement('button')
         btn.textContent = "Изменить"
         btn.classList.add('btn')
-        // btn.addEventListener('click')
+        btn.addEventListener('click',()=>this.emit('changeData','34'))
         this.editRef.appendChild(btn)
     }
 
@@ -153,6 +162,9 @@ export default class TableView extends EventEmitter {
         this.model.currentTableData.forEach((el) => {
             const newRow = this.tableRef.insertRow(-1);
             newRow.classList.add('table__tr')
+            if(this.model.pickedRow?.id===el.id){
+                newRow.classList.add('table__tr_picked')
+            }
             newRow.setAttribute('data-id', el.id)
             newRow.addEventListener('click', (e) => this.emit('selectRow', e.target.parentElement.dataset.id))
 

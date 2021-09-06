@@ -21,10 +21,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     wrapper.appendChild(wrapperEdit)
     wrapperTable.appendChild(table)
     wrapperEdit.appendChild(editArea)
-
+    alert('Инструкция\n' +
+        'Чтобы отсортировать по возрастанию или по убыванию нажмите дважды по заголовку колонны, чтобы убрать сортировку нажмите правой кнопкой.')
     const response = await fetch('./data.json', {method: 'get'})
     const data = await response.json()
-    const model = new TableModel(data)
+    const model = new TableModel(JSON.parse(data))
     const view = new TableView(model, table, editArea)
     new TableController(model, view)
     view.render()
